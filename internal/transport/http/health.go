@@ -1,0 +1,22 @@
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+type HealthResponse struct {
+	Status string `json:"status"`
+}
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response := HealthResponse{
+		Status: "ok",
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
