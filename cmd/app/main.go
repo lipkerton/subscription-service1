@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,9 +14,11 @@ import (
 )
 
 func main() {
+	log := config.NewLogger()
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Error("failed to load config", "error", err)
+		os.Exit(1)
 	}
 	r := httptransport.NewRouter()
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
@@ -29,9 +30,10 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 	go func() {
-		log.Printf("server started at %s", addr)
+		log.Info("server started", "addr", addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("failed to start server: %v", err)
+			log.Error("failed to start server", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -44,13 +46,14 @@ func main() {
 
 	<-stop
 
-	log.Println("shutting down server...")
+	log.Info("shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("server shutdown failed: %v", err)
+		log.Error("server shutdown failed", "error", err)
+		os.Exit(1)
 	}
-	log.Println("server stopped gracefully")
+	log.Info("server stopped gracefully")
 }
