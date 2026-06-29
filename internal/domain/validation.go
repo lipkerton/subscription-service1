@@ -6,9 +6,10 @@ import (
 )
 
 var (
-	ErrServiceNameRequired = errors.New("service name is required")
-	ErrPriceMustBePositive = errors.New("price must be positive")
-	ErrInvalidPeriod       = errors.New("end month must be greater than or equal to start month")
+	ErrServiceNameRequired  = errors.New("service name is required")
+	ErrPriceMustBePositive  = errors.New("price must be positive")
+	ErrInvalidPeriod        = errors.New("end month must be greater than or equal to start month")
+	ErrSubscriptionNotFound = errors.New("subscription not found")
 )
 
 func ValidateSubscription(sub Subscription) error {
