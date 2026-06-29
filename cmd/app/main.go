@@ -32,7 +32,7 @@ func main() {
 	defer dbPool.Close()
 
 	log.Info("connected to postgres")
-	r := httptransport.NewRouter()
+	r := httptransport.NewRouter(dbPool)
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	server := &http.Server{
 		Addr:         addr,

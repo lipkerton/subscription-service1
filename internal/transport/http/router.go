@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouter() http.Handler {
+func NewRouter(db *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
-	r.Get("/health", healthCheckHandler)
+	h := NewHandler(db)
+	r.Get("/health", h.HealthCheck)
 
 	return r
 }
