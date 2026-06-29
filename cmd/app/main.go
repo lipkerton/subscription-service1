@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/lipkerton/subscription-service1/internal/config"
+	storagepostgres "github.com/lipkerton/subscription-service1/internal/storage/postgres"
 	httptransport "github.com/lipkerton/subscription-service1/internal/transport/http"
 )
 
@@ -20,6 +21,17 @@ func main() {
 		log.Error("failed to load config", "error", err)
 		os.Exit(1)
 	}
+
+	ctx := context.Background()
+
+	dbPool, err := storagepostgres.NewPool(ctx, cfg.Postgres.DSN())
+	if err != nil {
+		log.Error("failed to connect to postgres", "error", err)
+		os.Exit(1)
+	}
+	defer dbPool.Close()
+
+	log.Info("connected to postgres")
 	r := httptransport.NewRouter()
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	server := &http.Server{
