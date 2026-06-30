@@ -14,9 +14,8 @@ func NewRouter(db *pgxpool.Pool, subscriptionService SubscriptionService) http.H
 
 	r.Get("/health", h.HealthCheck)
 
-	r.Route("/subscriptions", func(r chi.Router) {
-		r.Post("/", subscriptionHandler.Create)
-	})
+	r.Post("/subscriptions", subscriptionHandler.Create)
+	r.Get("/subscriptions/{id}", subscriptionHandler.GetByID)
 
 	return r
 }

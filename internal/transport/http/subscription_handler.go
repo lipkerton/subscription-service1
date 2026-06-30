@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/lipkerton/subscription-service1/internal/domain"
 	"github.com/lipkerton/subscription-service1/internal/transport/dto"
 )
 
 type SubscriptionService interface {
 	Create(ctx context.Context, sub domain.Subscription) (domain.Subscription, error)
+	GetByID(ctx context.Context, id int64) (domain.Subscription, error)
 }
 
 type SubscriptionHandler struct {
@@ -57,4 +60,32 @@ func (h *SubscriptionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	_ = json.NewEncoder(w).Encode(dto.NewSubscriptionResponse(createdSub))
+}
+
+func (h *SubscriptionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	idParam := chi.URLParam(r, "id")
+
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid subscription id")
+		return
+	}
+
+	sub, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrSubscriptionNotFound):
+			writeError(w, http.StatusNotFound, "subscription not found")
+			return
+		default:
+			writeError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	_ = json.NewEncoder(w).Encode(dto.NewSubscriptionResponse(sub))
 }
