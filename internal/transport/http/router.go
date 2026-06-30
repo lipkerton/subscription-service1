@@ -15,8 +15,9 @@ func NewRouter(db *pgxpool.Pool, subscriptionService SubscriptionService) http.H
 	r.Get("/health", h.HealthCheck)
 
 	r.Post("/subscriptions", subscriptionHandler.Create)
-	r.Get("/subscriptions/{id}", subscriptionHandler.GetByID)
 	r.Get("/subscriptions", subscriptionHandler.List)
+	r.Get("/subscriptions/summary", subscriptionHandler.Summary)
+	r.Get("/subscriptions/{id}", subscriptionHandler.GetByID)
 	r.Put("/subscriptions/{id}", subscriptionHandler.Update)
 	r.Delete("/subscriptions/{id}", subscriptionHandler.Delete)
 

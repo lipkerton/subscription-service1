@@ -240,3 +240,52 @@ func (r *SubscriptionRepository) List(ctx context.Context, filter domain.Subscri
 
 	return subscriptions, nil
 }
+
+func (r *SubscriptionRepository) CalculateSummary(ctx context.Context, filter domain.SummaryFilter) (int, error) {
+	query := `
+		SELECT
+			COALESCE(SUM(
+				price * (
+					(
+						EXTRACT(YEAR FROM age(
+							LEAST(COALESCE(end_month, $2), $2),
+							GREATEST(start_month, $1)
+						)) * 12
+					)
+					+
+					EXTRACT(MONTH FROM age(
+						LEAST(COALESCE(end_month, $2), $2),
+						GREATEST(start_month, $1)
+					))
+					+
+					1
+				)
+			), 0)::int
+		FROM subscriptions
+		WHERE start_month <= $2
+		  AND (end_month IS NULL OR end_month >= $1)
+	`
+
+	args := []any{
+		filter.FromMonth,
+		filter.ToMonth,
+	}
+
+	if filter.UserID != nil {
+		args = append(args, *filter.UserID)
+		query += fmt.Sprintf(" AND user_id = $%d", len(args))
+	}
+
+	if filter.ServiceName != nil {
+		args = append(args, *filter.ServiceName)
+		query += fmt.Sprintf(" AND service_name = $%d", len(args))
+	}
+
+	var total int
+
+	if err := r.db.QueryRow(ctx, query, args...).Scan(&total); err != nil {
+		return 0, fmt.Errorf("calculate subscriptions summary: %w", err)
+	}
+
+	return total, nil
+}

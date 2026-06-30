@@ -19,6 +19,7 @@ type SubscriptionService interface {
 	Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error)
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, filter domain.SubscriptionFilter) ([]domain.Subscription, error)
+	CalculateSummary(ctx context.Context, filter domain.SummaryFilter) (int, error)
 }
 
 type SubscriptionHandler struct {
@@ -194,4 +195,71 @@ func (h *SubscriptionHandler) List(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	_ = json.NewEncoder(w).Encode(dto.NewListSubscriptionsResponse(subscriptions))
+}
+
+func (h *SubscriptionHandler) Summary(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	fromParam := r.URL.Query().Get("from")
+	if fromParam == "" {
+		writeError(w, http.StatusBadRequest, "from is required")
+		return
+	}
+
+	toParam := r.URL.Query().Get("to")
+	if toParam == "" {
+		writeError(w, http.StatusBadRequest, "to is required")
+		return
+	}
+
+	fromMonth, err := domain.ParseMonth(fromParam)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "from must be in MM-YYYY format")
+		return
+	}
+
+	toMonth, err := domain.ParseMonth(toParam)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "to must be in MM-YYYY format")
+		return
+	}
+
+	filter := domain.SummaryFilter{
+		FromMonth: fromMonth,
+		ToMonth:   toMonth,
+	}
+
+	userIDParam := r.URL.Query().Get("user_id")
+	if userIDParam != "" {
+		userID, err := uuid.Parse(userIDParam)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid user_id")
+			return
+		}
+
+		filter.UserID = &userID
+	}
+
+	serviceNameParam := r.URL.Query().Get("service_name")
+	if serviceNameParam != "" {
+		filter.ServiceName = &serviceNameParam
+	}
+
+	total, err := h.service.CalculateSummary(r.Context(), filter)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrInvalidPeriod):
+			writeError(w, http.StatusBadRequest, "to must be greater than or equal to from")
+			return
+		default:
+			writeError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	_ = json.NewEncoder(w).Encode(dto.SummaryResponse{
+		Total: total,
+	})
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/lipkerton/subscription-service1/internal/domain"
 )
 
 func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
@@ -31,8 +30,4 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 	return pool, nil
-}
-
-func (r *SubscriptionRepository) CalculateSummary(ctx context.Context, filter domain.SummaryFilter) (int, error) {
-	return 0, fmt.Errorf("not implemented")
 }

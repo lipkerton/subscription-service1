@@ -26,6 +26,7 @@ type SubscriptionResponse struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
+
 type UpdateSubscriptionRequest struct {
 	ServiceName string `json:"service_name"`
 	Price       int    `json:"price"`
@@ -37,6 +38,10 @@ type UpdateSubscriptionRequest struct {
 type ListSubscriptionsResponse struct {
 	Items []SubscriptionResponse `json:"items"`
 	Count int                    `json:"count"`
+}
+
+type SummaryResponse struct {
+	Total int `json:"total"`
 }
 
 func NewListSubscriptionsResponse(subscriptions []domain.Subscription) ListSubscriptionsResponse {
