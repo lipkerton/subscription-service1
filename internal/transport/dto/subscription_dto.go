@@ -26,6 +26,45 @@ type SubscriptionResponse struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
+type updateSubscriptionRequest struct {
+	ServiceName string `json:"service_name"`
+	Price       int    `json:"price"`
+	UserID      string `json:"user_id"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date,omitempty"`
+}
+
+func (r updateSubscriptionRequest) ToDomain(id int64) (domain.Subscription, error) {
+	userID, err := uuid.Parse(r.UserID)
+	if err != nil {
+		return domain.Subscription{}, err
+	}
+
+	startMonth, err := domain.ParseMonth(r.StartDate)
+	if err != nil {
+		return domain.Subscription{}, err
+	}
+
+	var endMonth *time.Time
+
+	if r.EndDate != "" {
+		parsedEndMonth, err := domain.ParseMonth(r.EndDate)
+		if err != nil {
+			return domain.Subscription{}, err
+		}
+
+		endMonth = &parsedEndMonth
+	}
+
+	return domain.Subscription{
+		ID:          id,
+		ServiceName: r.ServiceName,
+		Price:       r.Price,
+		UserID:      userID,
+		StartMonth:  startMonth,
+		EndMonth:    endMonth,
+	}, nil
+}
 
 func (r CreateSubscriptionRequest) ToDomain() (domain.Subscription, error) {
 	userID, err := uuid.Parse(r.UserID)
