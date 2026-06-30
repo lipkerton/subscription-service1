@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/lipkerton/subscription-service1/internal/config"
+	"github.com/lipkerton/subscription-service1/internal/service"
 	storagepostgres "github.com/lipkerton/subscription-service1/internal/storage/postgres"
 	httptransport "github.com/lipkerton/subscription-service1/internal/transport/http"
 )
@@ -32,7 +33,11 @@ func main() {
 	defer dbPool.Close()
 
 	log.Info("connected to postgres")
-	r := httptransport.NewRouter(dbPool)
+
+	subscriptionRepo := storagepostgres.NewSubscriptionRepository(dbPool)
+	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
+
+	r := httptransport.NewRouter(dbPool, subscriptionService)
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	server := &http.Server{
 		Addr:         addr,

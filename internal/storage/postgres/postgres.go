@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/lipkerton/subscription-service1/internal/domain"
 )
 
 func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
@@ -30,4 +31,20 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 	return pool, nil
+}
+
+func (r *SubscriptionRepository) Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error) {
+	return domain.Subscription{}, fmt.Errorf("not implemented")
+}
+
+func (r *SubscriptionRepository) Delete(ctx context.Context, id int64) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (r *SubscriptionRepository) List(ctx context.Context, filter domain.SubscriptionFilter) ([]domain.Subscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *SubscriptionRepository) CalculateSummary(ctx context.Context, filter domain.SummaryFilter) (int, error) {
+	return 0, fmt.Errorf("not implemented")
 }
