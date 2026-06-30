@@ -26,7 +26,7 @@ type SubscriptionResponse struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
-type updateSubscriptionRequest struct {
+type UpdateSubscriptionRequest struct {
 	ServiceName string `json:"service_name"`
 	Price       int    `json:"price"`
 	UserID      string `json:"user_id"`
@@ -34,7 +34,7 @@ type updateSubscriptionRequest struct {
 	EndDate     string `json:"end_date,omitempty"`
 }
 
-func (r updateSubscriptionRequest) ToDomain(id int64) (domain.Subscription, error) {
+func (r UpdateSubscriptionRequest) ToDomain(id int64) (domain.Subscription, error) {
 	userID, err := uuid.Parse(r.UserID)
 	if err != nil {
 		return domain.Subscription{}, err
