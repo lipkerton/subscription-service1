@@ -105,3 +105,57 @@ func (r *SubscriptionRepository) GetByID(ctx context.Context, id int64) (domain.
 
 	return sub, nil
 }
+
+func (r *SubscriptionRepository) Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error) {
+	const query = `
+		UPDATE subscriptions
+		SET
+			service_name = $1,
+			price = $2,
+			user_id = $3,
+			start_month = $4,
+			end_month = $5,
+			updated_at = now()
+		WHERE id = $6
+		RETURNING
+			id,
+			service_name,
+			price,
+			user_id,
+			start_month,
+			end_month,
+			created_at,
+			updated_at
+	`
+
+	var updated domain.Subscription
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		sub.ServiceName,
+		sub.Price,
+		sub.UserID,
+		sub.StartMonth,
+		sub.EndMonth,
+		sub.ID,
+	).Scan(
+		&updated.ID,
+		&updated.ServiceName,
+		&updated.Price,
+		&updated.UserID,
+		&updated.StartMonth,
+		&updated.EndMonth,
+		&updated.CreatedAt,
+		&updated.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Subscription{}, domain.ErrSubscriptionNotFound
+		}
+
+		return domain.Subscription{}, fmt.Errorf("update subscription: %w", err)
+	}
+
+	return updated, nil
+}

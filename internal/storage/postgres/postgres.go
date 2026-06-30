@@ -33,10 +33,6 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-func (r *SubscriptionRepository) Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error) {
-	return domain.Subscription{}, fmt.Errorf("not implemented")
-}
-
 func (r *SubscriptionRepository) Delete(ctx context.Context, id int64) error {
 	return fmt.Errorf("not implemented")
 }
