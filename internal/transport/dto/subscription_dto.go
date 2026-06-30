@@ -34,6 +34,24 @@ type UpdateSubscriptionRequest struct {
 	EndDate     string `json:"end_date,omitempty"`
 }
 
+type ListSubscriptionsResponse struct {
+	Items []SubscriptionResponse `json:"items"`
+	Count int                    `json:"count"`
+}
+
+func NewListSubscriptionsResponse(subscriptions []domain.Subscription) ListSubscriptionsResponse {
+	items := make([]SubscriptionResponse, 0, len(subscriptions))
+
+	for _, sub := range subscriptions {
+		items = append(items, NewSubscriptionResponse(sub))
+	}
+
+	return ListSubscriptionsResponse{
+		Items: items,
+		Count: len(items),
+	}
+}
+
 func (r UpdateSubscriptionRequest) ToDomain(id int64) (domain.Subscription, error) {
 	userID, err := uuid.Parse(r.UserID)
 	if err != nil {

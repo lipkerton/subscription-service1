@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/lipkerton/subscription-service1/internal/domain"
 	"github.com/lipkerton/subscription-service1/internal/transport/dto"
 )
@@ -17,6 +18,7 @@ type SubscriptionService interface {
 	GetByID(ctx context.Context, id int64) (domain.Subscription, error)
 	Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error)
 	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context, filter domain.SubscriptionFilter) ([]domain.Subscription, error)
 }
 
 type SubscriptionHandler struct {
@@ -160,4 +162,36 @@ func (h *SubscriptionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *SubscriptionHandler) List(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	filter := domain.SubscriptionFilter{}
+
+	userIDParam := r.URL.Query().Get("user_id")
+	if userIDParam != "" {
+		userID, err := uuid.Parse(userIDParam)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid user_id")
+			return
+		}
+
+		filter.UserID = &userID
+	}
+
+	serviceNameParam := r.URL.Query().Get("service_name")
+	if serviceNameParam != "" {
+		filter.ServiceName = &serviceNameParam
+	}
+
+	subscriptions, err := h.service.List(r.Context(), filter)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	_ = json.NewEncoder(w).Encode(dto.NewListSubscriptionsResponse(subscriptions))
 }

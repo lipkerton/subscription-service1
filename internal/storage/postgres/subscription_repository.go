@@ -177,3 +177,66 @@ func (r *SubscriptionRepository) Delete(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+func (r *SubscriptionRepository) List(ctx context.Context, filter domain.SubscriptionFilter) ([]domain.Subscription, error) {
+	query := `
+		SELECT
+			id,
+			service_name,
+			price,
+			user_id,
+			start_month,
+			end_month,
+			created_at,
+			updated_at
+		FROM subscriptions
+		WHERE 1 = 1
+	`
+
+	args := make([]any, 0)
+
+	if filter.UserID != nil {
+		args = append(args, *filter.UserID)
+		query += fmt.Sprintf(" AND user_id = $%d", len(args))
+	}
+
+	if filter.ServiceName != nil {
+		args = append(args, *filter.ServiceName)
+		query += fmt.Sprintf(" AND service_name = $%d", len(args))
+	}
+
+	query += " ORDER BY id DESC"
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("select subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	subscriptions := make([]domain.Subscription, 0)
+
+	for rows.Next() {
+		var sub domain.Subscription
+
+		if err := rows.Scan(
+			&sub.ID,
+			&sub.ServiceName,
+			&sub.Price,
+			&sub.UserID,
+			&sub.StartMonth,
+			&sub.EndMonth,
+			&sub.CreatedAt,
+			&sub.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan subscription: %w", err)
+		}
+
+		subscriptions = append(subscriptions, sub)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate subscriptions rows: %w", err)
+	}
+
+	return subscriptions, nil
+}

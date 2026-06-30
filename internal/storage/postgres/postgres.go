@@ -33,10 +33,6 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-func (r *SubscriptionRepository) List(ctx context.Context, filter domain.SubscriptionFilter) ([]domain.Subscription, error) {
-	return nil, fmt.Errorf("not implemented")
-}
-
 func (r *SubscriptionRepository) CalculateSummary(ctx context.Context, filter domain.SummaryFilter) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
