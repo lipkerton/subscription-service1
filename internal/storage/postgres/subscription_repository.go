@@ -159,3 +159,21 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub domain.Subscrip
 
 	return updated, nil
 }
+
+func (r *SubscriptionRepository) Delete(ctx context.Context, id int64) error {
+	const query = `
+		DELETE FROM subscriptions
+		WHERE id = $1
+	`
+
+	result, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("delete subscription: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return domain.ErrSubscriptionNotFound
+	}
+
+	return nil
+}

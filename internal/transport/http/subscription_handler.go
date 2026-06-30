@@ -16,6 +16,7 @@ type SubscriptionService interface {
 	Create(ctx context.Context, sub domain.Subscription) (domain.Subscription, error)
 	GetByID(ctx context.Context, id int64) (domain.Subscription, error)
 	Update(ctx context.Context, sub domain.Subscription) (domain.Subscription, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type SubscriptionHandler struct {
@@ -135,4 +136,28 @@ func (h *SubscriptionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	_ = json.NewEncoder(w).Encode(dto.NewSubscriptionResponse(updatedSub))
+}
+
+func (h *SubscriptionHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid subscription id")
+		return
+	}
+
+	err = h.service.Delete(r.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrSubscriptionNotFound):
+			writeError(w, http.StatusNotFound, "subscription not found")
+			return
+		default:
+			writeError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
