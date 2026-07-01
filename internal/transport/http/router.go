@@ -1,18 +1,27 @@
 package http
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouter(db *pgxpool.Pool, subscriptionService SubscriptionService) http.Handler {
+func NewRouter(
+	db *pgxpool.Pool,
+	subscriptionService SubscriptionService,
+	log *slog.Logger,
+) http.Handler {
 	r := chi.NewRouter()
-	h := NewHandler(db)
+
+	r.Use(Recoverer(log))
+	r.Use(RequestLogger(log))
+
+	healthHandler := NewHandler(db)
 	subscriptionHandler := NewSubscriptionHandler(subscriptionService)
 
-	r.Get("/health", h.HealthCheck)
+	r.Get("/health", healthHandler.HealthCheck)
 
 	r.Post("/subscriptions", subscriptionHandler.Create)
 	r.Get("/subscriptions", subscriptionHandler.List)

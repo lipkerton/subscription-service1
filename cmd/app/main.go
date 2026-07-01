@@ -37,7 +37,7 @@ func main() {
 	subscriptionRepo := storagepostgres.NewSubscriptionRepository(dbPool)
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
 
-	r := httptransport.NewRouter(dbPool, subscriptionService)
+	r := httptransport.NewRouter(dbPool, subscriptionService, log)
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	server := &http.Server{
 		Addr:         addr,
