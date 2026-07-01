@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
   postgres:
     image: postgres:16
-    container_name: subscriptions_db
+    container_name: subscriptions_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
