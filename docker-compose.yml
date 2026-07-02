@@ -9,18 +9,39 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      migrations:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  migrations:
+    image: gomicro/goose:3.24.3
+    container_name: subscriptions_migrations
+    env_file:
+      - .env
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [
+        "goose",
+        "-dir",
+        "/migrations",
+        "postgres",
+        "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL_MODE}",
+        "up"
+      ]
+    depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
+
   postgres:
-    image: postgres:16
-    container_name: subscriptions_postgres
+    image: postgres:16-alpine
+    container_name: subscriptions_db
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
